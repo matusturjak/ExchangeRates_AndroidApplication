@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.Prediction"
+    android:background="#4B4A5A">
+
+    <TextView
+        android:id="@+id/prediction_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="25dp"
+        android:layout_marginTop="10dp"
+        android:text="Predictions"
+        android:textAlignment="center"
+        android:textColor="#BABABA"
+        android:textSize="20dp"
+         />
+
+    <Button
+        android:id="@+id/country1_button"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="50dp"
+        android:layout_toStartOf="@+id/to_text_view"
+        app:srcCompat="@mipmap/ic_launcher"
+        android:onClick="showPopup"/>
+
+    <Button
+        android:id="@+id/country2_button"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="50dp"
+        android:layout_toEndOf="@+id/to_text_view"
+        app:srcCompat="@mipmap/ic_launcher"
+        android:onClick="showPopup"/>
+
+    <TextView
+        android:id="@+id/to_text_view"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="75dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/ic_chevron"
+        />
+
+    <TextView
+        android:id="@+id/country1_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/country1_button"
+        android:layout_toStartOf="@+id/to_text_view"
+        android:textColor="#BABABA"
+        android:text="EUR" />
+
+    <TextView
+        android:id="@+id/country2_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/to_text_view"
+        android:layout_below="@+id/country2_button"
+        android:textColor="#BABABA"
+        android:text="CZK" />
+
+    <TextView
+        android:id="@+id/predict_to_text_view"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_toStartOf="@id/button_1_day"
+        android:layout_marginTop="15dp"
+        android:text="Number of days: "
+        android:textColor="#BABABA"
+        android:layout_below="@+id/country1_text_view"
+        android:textSize="20dp"/>
+
+    <Button
+        android:id="@+id/button_5_days"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/country2_text_view"
+        android:layout_alignParentRight="true"
+        android:text="5D"
+        android:onClick="predictFiveDays"/>
+
+    <Button
+        android:id="@+id/button_3_days"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/country2_text_view"
+        android:layout_toStartOf="@+id/button_5_days"
+        android:text="3D"
+        android:onClick="predictThreeDays"/>
+
+    <Button
+        android:id="@+id/button_1_day"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/country2_text_view"
+        android:layout_toStartOf="@+id/button_3_days"
+        android:text="1D"
+        android:onClick="predictOneDay" />
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/chart1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/predict_to_text_view"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"/>
+
+</RelativeLayout>

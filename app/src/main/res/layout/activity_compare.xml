@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.Compare"
+    android:background="#4B4A5A">
+
+
+    <ImageView
+        android:id="@+id/country1_image_view"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="20dp"
+        android:layout_toStartOf="@+id/button_swap"
+        app:srcCompat="@mipmap/ic_launcher" />
+
+    <ImageView
+        android:id="@+id/country2_image_view"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="20dp"
+        android:layout_toEndOf="@+id/button_swap"
+        app:srcCompat="@mipmap/ic_launcher" />
+
+    <Button
+        android:id="@+id/button_swap"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="60dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:background="@drawable/ic_autorenew"
+        android:shadowColor="#8C8C8C"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:shadowRadius="5"
+        android:textColor="#0A3BFF"
+        android:textSize="15dp"
+        android:onClick="swapCurrency"/>
+
+    <TextView
+        android:id="@+id/country1_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/country1_image_view"
+        android:layout_toStartOf="@+id/button_swap"
+        android:textColor="#BABABA"
+        android:text="EUR" />
+
+    <TextView
+        android:id="@+id/country2_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/button_swap"
+        android:layout_below="@+id/country2_image_view"
+        android:textColor="#BABABA"
+        android:text="USD"
+        />
+
+    <EditText
+        android:id="@+id/country1_edit_text"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textAlignment="textEnd"
+        android:layout_below="@+id/country1_text_view"
+        android:layout_toStartOf="@+id/button_swap"
+        android:ems="10"
+        android:hint="1 EUR"
+        android:textColor="#BABABA"
+        android:textColorHint="#8D8D8D"
+        android:inputType="numberDecimal" />
+
+    <EditText
+        android:id="@+id/country2_edit_text"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/country2_text_view"
+        android:layout_toEndOf="@+id/button_swap"
+        android:ems="10"
+        android:hint="1.06 USD"
+        android:textColor="#BABABA"
+        android:textColorHint="#8D8D8D"
+        android:inputType="numberDecimal" />
+
+    <Button
+        android:id="@+id/button_calculate"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/button_swap"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/ic_chevron"
+        android:onClick="calculateCurrency"
+        />
+
+    <Button
+        android:id="@+id/button_all"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/button_calculate"
+        android:layout_alignParentRight="true"
+        android:text="all"
+        android:onClick="showGraph"/>
+
+    <Button
+        android:id="@+id/button_ten_y"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/button_calculate"
+        android:layout_toStartOf="@+id/button_all"
+        android:text="10y"
+        android:onClick="showGraph"/>
+
+    <Button
+        android:id="@+id/button_five_y"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/button_calculate"
+        android:layout_toStartOf="@+id/button_ten_y"
+        android:text="5y"
+        android:onClick="showGraph"/>
+    <Button
+        android:id="@+id/button_one_y"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/button_calculate"
+        android:layout_toStartOf="@+id/button_five_y"
+        android:text="1y"
+        android:onClick="showGraph"/>
+    <Button
+        android:id="@+id/button_six_m"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/button_calculate"
+        android:layout_toStartOf="@+id/button_one_y"
+        android:text="6m"
+        android:onClick="showGraph"/>
+    <Button
+        android:id="@+id/button_one_m"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/button_calculate"
+        android:layout_toStartOf="@+id/button_six_m"
+        android:text="1m"
+        android:onClick="showGraph"/>
+
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/chart1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/button_calculate"
+        android:layout_marginTop="40dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"/>
+</RelativeLayout>

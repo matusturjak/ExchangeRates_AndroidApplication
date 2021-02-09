@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/item_eur"
+        android:title="EUR" />
+
+    <item android:id="@+id/item_czk"
+        android:title="CZK" />
+
+    <item android:id="@+id/item_huf"
+        android:title="HUF" />
+
+    <item android:id="@+id/item_pln"
+        android:title="PLN" />
+
+    <item android:id="@+id/item_aud"
+        android:title="AUD" />
+
+    <item android:id="@+id/item_cad"
+        android:title="CAD" />
+
+    <item android:id="@+id/item_chf"
+        android:title="CHF" />
+
+    <item android:id="@+id/item_dkk"
+        android:title="DKK" />
+
+    <item android:id="@+id/item_gbp"
+        android:title="GBP" />
+
+    <item android:id="@+id/item_hkd"
+        android:title="HKD" />
+
+    <item android:id="@+id/item_jpy"
+        android:title="JPY" />
+
+    <item android:id="@+id/item_krw"
+        android:title="KRW" />
+
+    <item android:id="@+id/item_nok"
+        android:title="NOK" />
+
+    <item android:id="@+id/item_sek"
+        android:title="SEK" />
+
+    <item android:id="@+id/item_sqd"
+        android:title="SGD" />
+
+    <item android:id="@+id/item_USD"
+        android:title="USD" />
+
+    <item android:id="@+id/item_zar"
+        android:title="ZAR" />
+</menu>
