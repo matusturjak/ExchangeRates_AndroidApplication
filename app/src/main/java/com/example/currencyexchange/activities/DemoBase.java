@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public abstract class DemoBase extends AppCompatActivity implements OnChartValueSelectedListener,ActivityCompat.OnRequestPermissionsResultCallback {
@@ -103,6 +104,53 @@ public abstract class DemoBase extends AppCompatActivity implements OnChartValue
         rightAxis.setEnabled(false);
     }
 
+    protected void setData() {
+        if(this.items.size() == 0)
+            return;
+
+        ArrayList<Entry> values = new ArrayList<>(this.items.size());
+
+        MyDate myDate = new MyDate();
+
+        this.max = 0;
+        this.min = 1000;
+
+        for (int i = 0; i < this.items.size(); i++) {
+            this.min = this.items.get(i) < this.min ? this.items.get(i) : this.min;
+            this.max = this.items.get(i) > this.max ? this.items.get(i) : this.max;
+            values.add(new Entry(myDate.daysBetween("1970-01-01",this.dates.get(i)), this.items.get(i)));
+        }
+
+        chart.getAxisLeft().setAxisMaximum((float) (this.max + this.max*0.02));
+        chart.getAxisLeft().setAxisMinimum((float) (this.min - this.min*0.02));
+
+        LineDataSet set1 = new LineDataSet(values, "DataSet 1");
+        set1.setAxisDependency(YAxis.AxisDependency.LEFT);
+        set1.setColor(ColorTemplate.getHoloBlue());
+        set1.setValueTextColor(ColorTemplate.getHoloBlue());
+        set1.setLineWidth(1.5f);
+        set1.setDrawCircles(false);
+        set1.setDrawValues(false);
+
+        if(this instanceof Prediction){
+            set1.setDrawCircles(true);
+        } else {
+            set1.setDrawCircles(false);
+        }
+        set1.setFillAlpha(65);
+        set1.setFillColor(ColorTemplate.getHoloBlue());
+        set1.setHighLightColor(Color.rgb(244, 117, 117));
+        set1.setDrawCircleHole(false);
+        set1.setDrawFilled(true);
+
+        LineData data = new LineData(set1);
+        data.setValueTextColor(Color.BLACK);
+        data.setValueTextSize(9f);
+
+
+        chart.setData(data);
+    }
+
     /**
      * Metóda, ktorá vykreslí v grafe hodnoty menového kurzu za posledných numOfDays dní.
      * @param numOfDays
@@ -164,7 +212,6 @@ public abstract class DemoBase extends AppCompatActivity implements OnChartValue
         LineData data = new LineData(set1);
         data.setValueTextColor(Color.BLACK);
         data.setValueTextSize(9f);
-
 
         chart.setData(data);
     }

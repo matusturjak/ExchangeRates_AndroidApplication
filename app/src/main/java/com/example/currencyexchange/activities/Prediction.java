@@ -19,38 +19,31 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.currencyexchange.classes.CurrencyApi;
-import com.example.currencyexchange.ExponentialSmoothing.DoubleExponentialSmoothing;
-import com.example.currencyexchange.ExponentialSmoothing.SingleExponentialSmoothing;
+import com.example.currencyexchange.classes.JsonParser;
 import com.example.currencyexchange.classes.Item;
 import com.example.currencyexchange.classes.MyDate;
 import com.example.currencyexchange.R;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TimeZone;
-import java.util.TreeMap;
 
 public class Prediction extends DemoBase implements PopupMenu.OnMenuItemClickListener {
     private RequestQueue mQueue;
-    private CurrencyApi api;
+    private JsonParser api;
     private TextView first;
     private TextView second;
     private Button image1;
     private Button image2;
     private Button[] predictions;
-    private ArrayList<Float> allRates;
     private ArrayList<Item> arrayListItems;
     private Item right;
     private Item left;
@@ -69,7 +62,7 @@ public class Prediction extends DemoBase implements PopupMenu.OnMenuItemClickLis
         if(this.isNetworkConnected()){
             this.initComponents();
             this.initGraph();
-            this.jsonParse();
+            this.getLatestRates();
         } else {
             Toast.makeText(this,"No internet connection",
                     Toast.LENGTH_LONG).show();
@@ -98,7 +91,7 @@ public class Prediction extends DemoBase implements PopupMenu.OnMenuItemClickLis
         this.image2.setBackgroundResource(R.drawable.czk);
         this.change = false;
 
-        this.api = new CurrencyApi();
+        this.api = new JsonParser();
         this.items = new ArrayList<>();
         this.dates = new ArrayList<>();
 
@@ -112,43 +105,32 @@ public class Prediction extends DemoBase implements PopupMenu.OnMenuItemClickLis
         this.predictions[1] = findViewById(R.id.button_3_days);
         this.predictions[2] = findViewById(R.id.button_1_day);
 
-        this.allRates = this.getData();
     }
 
     /**
      * Ziska historicke hodnoty menoveho kurzu z webovej stranky a tie ulozi listov triedy
      * pre dalsiu pracu.
      */
-    private void jsonParse(){
+    private void getLatestRates(){
         this.items.clear();
         this.dates.clear();
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeZone(TimeZone.getTimeZone("GMT"));
-        cal.add(Calendar.DATE,0);
-        String to = getDate(cal);
 
-        cal.add(Calendar.DATE,-15);
-        String from = getDate(cal);
+        String url = "http://192.168.0.161:8080/rates/" + this.left.getName() + "-" + this.right.getName() + "/15";
 
-        String url = "https://api.exchangeratesapi.io/history?start_at=" + from + "&end_at="+
-                to+"&base="+ this.left.getName() + "&symbols="+this.right.getName();
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(JSONArray response) {
                         try {
-                            Map<String,String> list = api.getAllTimeRates(response,right.getName());
-                            TreeMap<String, String> sorted = new TreeMap<>();
-                            sorted.putAll(list);
+                            Map<String, Double> list = api.getAllTimeRates(response);
 
-                            for(Map.Entry<String, String> entry : sorted.entrySet()) {
-                                float value = Float.parseFloat(entry.getValue());
+                            for(Map.Entry<String, Double> entry : list.entrySet()) {
+                                float value = Float.parseFloat(entry.getValue() + "");
                                 items.add(value);
                                 dates.add(entry.getKey());
                             }
 
-                            setData(items.size());
+                            setData();
                             chart.invalidate();
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -172,47 +154,6 @@ public class Prediction extends DemoBase implements PopupMenu.OnMenuItemClickLis
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
         return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnected();
-    }
-
-    /**
-     * Metoda vytvorena vrati historicke data menoveho kurzu a nasledne tieto data sa pouziju
-     * pre vypocet predikcii.
-     * @return
-     */
-    private ArrayList<Float> getData(){
-        final ArrayList<Float> al = new ArrayList<>();
-
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = new Date();
-        String url = "https://api.exchangeratesapi.io/history?start_at=2000-01-01&end_at="+
-                simpleDateFormat.format(date)+"&base="+ this.left.getName() + "&symbols="+this.right.getName();
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            Map<String,String> list = api.getAllTimeRates(response,right.getName());
-                            TreeMap<String, String> sorted = new TreeMap<>();
-                            sorted.putAll(list);
-
-                            for(Map.Entry<String, String> entry : sorted.entrySet()) {
-                                float value = Float.parseFloat(entry.getValue());
-                                al.add(value);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
-            }
-        });
-
-        this.mQueue.add(request);
-        return al;
     }
 
     /**
@@ -368,8 +309,7 @@ public class Prediction extends DemoBase implements PopupMenu.OnMenuItemClickLis
         this.first.setText(this.left.getName());
         this.second.setText(this.right.getName());
 
-        jsonParse();
-        this.allRates = this.getData();
+        getLatestRates();
     }
 
     /**
@@ -378,9 +318,7 @@ public class Prediction extends DemoBase implements PopupMenu.OnMenuItemClickLis
      */
     public void predictOneDay(View view) {
 
-        SingleExponentialSmoothing s = new SingleExponentialSmoothing(this.allRates.size(),1);
-        DoubleExponentialSmoothing d = new DoubleExponentialSmoothing(this.allRates.size(),1);
-        predict(s,d,1,0.6f);
+        this.getPredictions(1);
     }
 
     /**
@@ -388,9 +326,7 @@ public class Prediction extends DemoBase implements PopupMenu.OnMenuItemClickLis
      * @param view
      */
     public void predictThreeDays(View view) {
-        SingleExponentialSmoothing s = new SingleExponentialSmoothing(this.allRates.size(),3);
-        DoubleExponentialSmoothing d = new DoubleExponentialSmoothing(this.allRates.size(),3);
-        predict(s,d,3,0.4f);
+        this.getPredictions(3);
     }
 
     /**
@@ -398,56 +334,48 @@ public class Prediction extends DemoBase implements PopupMenu.OnMenuItemClickLis
      * @param view
      */
     public void predictFiveDays(View view) {
-        SingleExponentialSmoothing s = new SingleExponentialSmoothing(this.allRates.size(),5);
-        DoubleExponentialSmoothing d = new DoubleExponentialSmoothing(this.allRates.size(),5);
-        predict(s,d,5, 0.3f);
-    }
-
-    /**
-     * Metoda vypocita predikcie menoveho kurzu a nasledne ich zobrazi v grafe.
-     * @param s
-     * @param d
-     * @param numOfDays
-     * @param alpha
-     */
-    public void predict(SingleExponentialSmoothing s, DoubleExponentialSmoothing d, int numOfDays, float alpha){
-        Float[] arr = new Float[this.allRates.size()];
-        float[] ses = s.predict(this.allRates.toArray(arr),alpha);
-        float[] des = d.predict(this.allRates.toArray(arr),alpha);
-
-        MyDate m = new MyDate();
-
-        if(this.items.size() <= 0 || this.dates.size() <=0)
-            return;
-
-        this.removePredictions();
-
-        if(s.getResiduals() > d.getResiduals()){
-            for(int i = 0; i < des.length; i++){
-                this.items.add(des[i]);
-                this.dates.add(m.addDays(this.dates.get(this.dates.size() - 1),1));
-            }
-        } else {
-            for(int i = 0; i < ses.length; i++){
-                this.items.add(ses[i]);
-                this.dates.add(m.addDays(this.dates.get(this.dates.size() - 1),1));
-            }
-        }
-        setData(this.items.size());
-        chart.invalidate();
+        this.getPredictions(5);
     }
 
     /**
      * Pomocna metoda, ktora vymaze vypocitane predikcie.
      */
     public void removePredictions(){
-        DecimalFormat df = new DecimalFormat("#.#####");
-        if(this.items.size() <= 0 || this.dates.size() <=0 || this.allRates.size() <= 0)
-            return;
-
-        while(!df.format(this.items.get(this.items.size() - 1)).equals(df.format(this.allRates.get(this.allRates.size() - 1)))){
+        while (this.items.size() != 15 && this.dates.size() != 15 && this.items.size() > 0) {
             this.items.remove(this.items.size() - 1);
             this.dates.remove(this.dates.size() - 1);
         }
+    }
+
+    public void getPredictions(final int numOfPredictions) {
+        this.removePredictions();
+
+        String url = "http://192.168.0.161:8080/prediction/" + this.left.getName() + "-" + this.right.getName() + "/" + numOfPredictions;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try {
+                            Map<String, Float> hashMap = api.getPredictions(response);
+                            for(Map.Entry<String, Float> entry : hashMap.entrySet()) {
+                                items.add(entry.getValue());
+                                dates.add(entry.getKey());
+                            }
+
+                            setData();
+                            chart.invalidate();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+
+        this.mQueue.add(jsonArrayRequest);
     }
 }

@@ -4,7 +4,10 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 
 import android.text.Editable;
@@ -22,9 +25,10 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.currencyexchange.classes.CurrencyApi;
+import com.example.currencyexchange.classes.JsonParser;
 import com.example.currencyexchange.classes.Item;
 import com.example.currencyexchange.classes.MyDate;
 import com.example.currencyexchange.R;
@@ -32,13 +36,14 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.text.SimpleDateFormat;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Map;
-import java.util.TreeMap;
 import java.text.DecimalFormat;
 
 /**
@@ -46,7 +51,7 @@ import java.text.DecimalFormat;
  */
 public class Compare extends DemoBase implements OnChartValueSelectedListener {
     private RequestQueue mQueue;
-    private CurrencyApi api;
+    private JsonParser api;
     private Item base;
     private Item choosen;
     private EditText baseCountryEdit;
@@ -75,7 +80,7 @@ public class Compare extends DemoBase implements OnChartValueSelectedListener {
             initComponents();
             setTitle(this.base.getName() + " -> " + this.choosen.getName());
             initGraph();
-            jsonParse();
+            jsonParse(30);
         }
 
         this.baseCountryEdit.addTextChangedListener(new TextWatcher() {
@@ -109,7 +114,7 @@ public class Compare extends DemoBase implements OnChartValueSelectedListener {
 
         Intent intent = getIntent();
 
-        this.api = new CurrencyApi();
+        this.api = new JsonParser();
         this.base = intent.getParcelableExtra("base");
         this.choosen = intent.getParcelableExtra("choosen");
         this.mQueue = Volley.newRequestQueue(this);
@@ -155,47 +160,32 @@ public class Compare extends DemoBase implements OnChartValueSelectedListener {
         }
     }
 
-    /**
-     * metóda, ktorá je zodpovedná za načítanie JSON dát z internetovej adresy.
-     */
-    private void jsonParse(){
+    private void jsonParse(int numOfDays) {
         this.items.clear();
         this.dates.clear();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = new Date();
-        String url = "https://api.exchangeratesapi.io/history?start_at=2000-01-01&end_at="+
-                simpleDateFormat.format(date)+"&base="+this.base.getName()+"&symbols="+this.choosen.getName();
 
+        String url = "http://192.168.0.161:8080/rates/" + this.base.getName() + "-" + this.choosen.getName() + "/"+numOfDays;
 
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
-                    /**
-                     * metóda v ktorej sa transformujú dáta z JSON formátu a uložia sa do atribútov
-                     * items a dates. Následne sa v tejto triede zavolá metóda setData, ktorá
-                     * vykreslí graf s načítanými dátami.
-                     * @param response
-                     */
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(JSONArray response) {
                         try {
-                            Map<String,String> list = api.getAllTimeRates(response,choosen.getName());
-                            TreeMap<String, String> sorted = new TreeMap<>();
-                            sorted.putAll(list);
+                            Map<String, Double> map = api.getAllTimeRates(response);
 
-                            for(Map.Entry<String, String> entry : sorted.entrySet()) {
-                                float value = Float.parseFloat(entry.getValue());
-
+                            for(Map.Entry<String, Double> entry : map.entrySet()) {
+                                Float value = Float.parseFloat(entry.getValue() + "");
                                 items.add(value);
                                 dates.add(entry.getKey());
                             }
 
-                            setData(30);
+                            setData();
                             chart.invalidate();
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
-        }, new Response.ErrorListener() {
+                }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 error.printStackTrace();
@@ -275,15 +265,14 @@ public class Compare extends DemoBase implements OnChartValueSelectedListener {
         this.base = this.choosen;
         this.choosen = newBase;
 
-        String url = "https://api.exchangeratesapi.io/latest?base="+this.base.getName()+"&symbols="+this.choosen.getName();
+        String url = "http://192.168.0.161:8080/latest/" + this.base.getName() + "/" + this.choosen.getName();
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            String s = api.getLatestRate(response,choosen.getName());
-                            double value = Double.parseDouble(s);
+                            double value = api.getLatestRate(response);
 
                             choosen.setExchangeNumber(value);
                             baseCountryEdit.setHint("1" + base.getName());
@@ -294,7 +283,7 @@ public class Compare extends DemoBase implements OnChartValueSelectedListener {
 
                             baseImage.setImageResource(base.getImageResource());
                             choosenImage.setImageResource(choosen.getImageResource());
-                            jsonParse();
+                            jsonParse(30);
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -314,31 +303,26 @@ public class Compare extends DemoBase implements OnChartValueSelectedListener {
      * konkrétneho tlačidla.
      * @param view
      */
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void showGraph(View view) {
         switch(view.getId()){
             case R.id.button_all:
-                setData(this.dates.size());
-                chart.invalidate();
+                jsonParse(Integer.MAX_VALUE);
                 break;
             case R.id.button_ten_y:
-                setData(3650);
-                chart.invalidate();
+                jsonParse(3650);
                 break;
             case R.id.button_five_y:
-                setData(365*5);
-                chart.invalidate();
+                jsonParse(365*5);
                 break;
             case R.id.button_one_y:
-                setData(365);
-                chart.invalidate();
+                jsonParse(365);
                 break;
             case R.id.button_six_m:
-                setData(180);
-                chart.invalidate();
+                jsonParse(180);
                 break;
             case R.id.button_one_m:
-                setData(30);
-                chart.invalidate();
+                jsonParse(30);
                 break;
         }
     }

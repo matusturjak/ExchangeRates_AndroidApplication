@@ -25,18 +25,17 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.currencyexchange.classes.AdapterClass;
-import com.example.currencyexchange.BuildConfig;
-import com.example.currencyexchange.classes.CurrencyApi;
+import com.example.currencyexchange.classes.JsonParser;
 import com.example.currencyexchange.classes.Favorites;
 import com.example.currencyexchange.classes.Item;
 import com.example.currencyexchange.R;
 import com.google.android.material.navigation.NavigationView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -46,7 +45,7 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private RequestQueue mQueue;
-    private CurrencyApi api;
+    private JsonParser api;
     private ArrayList<Item> items;
     private ArrayList<Item> allItems;
     private TextView baseCurrency;
@@ -92,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.drawer = findViewById(R.id.drawer_layout);
         this.navigation = findViewById(R.id.nav_view);
         this.navigation.setNavigationItemSelectedListener(this);
-        this.api = new CurrencyApi();
+        this.api = new JsonParser();
         this.baseCurrency = findViewById(R.id.base_currency_text_view);
         this.baseCurrencyImage = findViewById(R.id.base_currency_image_view);
         this.favorites = new Favorites(MainActivity.this );
@@ -138,26 +137,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         String url = "";
         if(base.equals("EUR")){
-            url = "https://api.exchangeratesapi.io/latest?base=EUR";
+            url = "http://192.168.0.161:8080/latest/EUR";
             items.add(new Item(R.drawable.eur,"EUR","","1 " + base + "= " + 1.0 + " " + "EUR", 1.0, false, true));
             baseCurrency.setText(base);
             allItems.add(new Item(R.drawable.eur,"EUR","","1 " + base + "= " + 1.0 + " " + "EUR", 1.0, false, true));
             baseCurrency.setText(base);
         } else {
-            url = "https://api.exchangeratesapi.io/latest?base="+base;
+            url = "http://192.168.0.161:8080/latest/" + base;
         }
 
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
+        JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(JSONArray response) {
                         try {
-                            HashMap<String,String> list = api.getLatestRates(response);
+                            HashMap<String, Double> list = api.getLatestRates(response);
                             DecimalFormat df = new DecimalFormat("####0.0000");
 
-                            for(Map.Entry<String, String> entry : list.entrySet()) {
+                            for(Map.Entry<String, Double> entry : list.entrySet()) {
                                 String key = entry.getKey();
-                                double value = Double.parseDouble(entry.getValue());
+                                double value = entry.getValue();
 
                                 Item i = new Item(R.drawable.ic_favorite_border_black_24dp,key,"","1 " + base + " = " + df.format(value) + " " + key, value, false, false);
 
@@ -183,11 +182,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
+
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
+
             }
         });
 
